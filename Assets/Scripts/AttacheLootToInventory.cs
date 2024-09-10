@@ -11,16 +11,20 @@ public class AttacheLootToInventory : MonoBehaviour
     public GameObject CheckingObject;
     public GameObject ObjectWithCellArray;
     
-    public bool CanAttach = true;
+    
     public RectTransform RT;
 
+    public bool CanAttach = true;
 
-    public void AttacheLoot() //надо добавить переменную при заполнении которой дальнейши проверки проводитьс€ не будут, что б после нахождени€ необходимого пространства CanAttach не помен€лс€
+ /*‘ункци€ проверок €чеек и присоединение айтема к первой подход€щей €чейке
+                               */
+    public void AttacheLoot() //функци€ котора€ вызываетс€ при нажатии на зелЄную галочку (попытка прин€ть лут в инвентарь)
     {
-        Looting LootingScript = ObjectWithCellArray.GetComponent<Looting>();
+        Looting LootingScript = ObjectWithCellArray.GetComponent<Looting>(); //получаем достум к компоненту/скрипту Looting
         ItemSize itemSize = AttachingItem.GetComponent<ItemSize>();
         for (int i = 0; i<(InventoryHorizontal*InventoryVertical); i++) //ѕрошлись по всем €чейкам
         {
+            Debug.Log("Checking Cell Index " + i);
             CheckingObject = LootingScript.InventCells[i];
             IsCellFull isCellFull = CheckingObject.GetComponent<IsCellFull>();
 
@@ -30,33 +34,36 @@ public class AttacheLootToInventory : MonoBehaviour
                 if (InventoryHorizontal - (i % InventoryHorizontal) >= itemSize.Horizontal) //ѕровер€ю, что эта €чейка не за пределами инвентар€ Ўирина инвентар€ - количество €чеек справа >= горизонтального размера айтема
                 {
 
-                    if ((InventoryVertical * InventoryHorizontal - 1) - i >= InventoryHorizontal * (itemSize.Vertical)) //ѕровер€ю, помещаетс€ ли объект по высоте  
+                    if (InventoryVertical - (i/InventoryVertical) >= itemSize.Vertical ) //ѕровер€ю, помещаетс€ ли объект по высоте  
                     {
+
 
                     }
                     else
                     {
                         Debug.Log("ToVerticalMuch");
                         CanAttach = false;
+                        continue;
                     }
                 }
+                
                 else
                 {
-                    Debug.Log("ToHorizontalMuch");
+                    Debug.Log("ToHorizontalMuch"); 
                     CanAttach = false;
+                    continue;
                 }
 
 
-                for (int a = itemSize.Vertical; a > 0; a--) //Ќачинаем построчную проверку €чеек в квадрате размером с айтем
-                {
-                    Debug.Log("i = " + i);
-                    for (int b = itemSize.Horizontal; b > 0; b--)
-                    {
-                        
-                        int n = i + (b - 1) + (InventoryHorizontal * (a - 1));
-                        
-                        
 
+
+//TO DO TO DO TODO найти место, где надо выйти из алгоритма, в случае, если €чейка нам подходит 
+                for (int itemVert = itemSize.Vertical; itemVert > 0; itemVert--) //Ќачинаем построчную проверку €чеек в квадрате размером с айтем
+                {
+                    
+                    for (int itemHor = itemSize.Horizontal; itemHor > 0; itemHor--)
+                    {
+                        int n = i + (itemHor - 1) + (InventoryHorizontal * (itemVert - 1));
                         if (n < (InventoryHorizontal * InventoryVertical))
                         { 
                             CheckingObject = LootingScript.InventCells[n]; //«аписываю рассматриваемую €чейку в переменную
@@ -65,19 +72,20 @@ public class AttacheLootToInventory : MonoBehaviour
                             {
                                 if (!isCellFull1.CellFull)
                                 {
-                                    Debug.Log("a = " + a);
-                                    Debug.Log("b = " + b);
-                                    Debug.Log(n);
+                                    Debug.Log("itemSize.Vertical = " + itemVert);
+                                    Debug.Log("itemSize.Horizontal = " + itemHor);
+                                    
                                 }
                                 else
                                 {
                                     CanAttach = false;
+                                    break;
                                 }
                             }
                             else
                             {
-                                Debug.Log("Null a = " + a);
-                                Debug.Log("Null b = " + b);
+                                Debug.Log("Null a = " + itemVert);
+                                Debug.Log("Null b = " + itemHor);
                                 Debug.Log(n);
                                 CanAttach = false;
                             }
@@ -92,16 +100,12 @@ public class AttacheLootToInventory : MonoBehaviour
             else
             {
                 CanAttach = false;
-            }
-            if (CanAttach)
-            {
-
-                Debug.Log(i);
-                Debug.Log("Object Created");
-                break;
-                
-            }
+            }   
+        }
+        if (CanAttach)
+        {
             
+            Debug.Log("Object Created");
         }
         CanAttach = true;
     }

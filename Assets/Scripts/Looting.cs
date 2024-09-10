@@ -8,8 +8,11 @@ public class Looting : MonoBehaviour
     public GameObject AcceptOrTrashPanel;
     public GameObject YouFindImage;
     public GameObject YouFindeName;
-    public GameObject[] InventCells;
-    public GameObject[] lootTable;
+
+    
+
+    public GameObject[] InventCells; //список объектов €чеек
+    public GameObject[] lootTable; //список возможных дл€ выпадени€ предметов
     float a;
     float b;
     float c;
@@ -24,7 +27,7 @@ public class Looting : MonoBehaviour
     {
         AcceptOrTrashPanel.SetActive(true);
         float num = Random.Range(0.000001f, 1);
-        
+        AttacheLootToInventory attacheLoot = AcceptOrTrashPanel.GetComponent<AttacheLootToInventory>();
        
 
         a = num * 10000000;
@@ -37,6 +40,7 @@ public class Looting : MonoBehaviour
 
         if (d == 0)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag0 = lootTable[d].GetComponent<Image>(); 
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag0.sprite;
@@ -49,6 +53,7 @@ public class Looting : MonoBehaviour
 
         if (d == 1)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag1 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag1.sprite;
@@ -59,6 +64,7 @@ public class Looting : MonoBehaviour
 
         if (d == 2)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag2 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag2.sprite;
@@ -69,6 +75,7 @@ public class Looting : MonoBehaviour
 
         if (d == 3)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag3 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag3.sprite;
@@ -79,6 +86,7 @@ public class Looting : MonoBehaviour
 
         if (d == 4)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag4 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag4.sprite;
@@ -89,6 +97,7 @@ public class Looting : MonoBehaviour
 
         if (d == 5)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag5 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag5.sprite;
@@ -99,6 +108,7 @@ public class Looting : MonoBehaviour
 
         if (d == 6)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag6 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag6.sprite;
@@ -109,6 +119,7 @@ public class Looting : MonoBehaviour
 
         if (d == 7)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag7 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag7.sprite;
@@ -119,6 +130,7 @@ public class Looting : MonoBehaviour
 
         if (d == 8)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag8 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag8.sprite;
@@ -129,6 +141,7 @@ public class Looting : MonoBehaviour
 
         if (d == 9)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag9 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag9.sprite;
@@ -139,6 +152,7 @@ public class Looting : MonoBehaviour
 
         if (d == 10)
         {
+            attacheLoot.AttachingItem = lootTable[d];
             Image Imag10 = lootTable[d].GetComponent<Image>();
             Image Imag = YouFindImage.GetComponent<Image>();
             Imag.sprite = Imag10.sprite;
