@@ -4,5 +4,6 @@ using UnityEngine;
 
 public class CellFullOrNot : MonoBehaviour
 {
+    public GameObject ParentOfCell;
     public bool IsFull;
 }

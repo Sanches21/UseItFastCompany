@@ -23,6 +23,8 @@ public class CameraMove : MonoBehaviour
     private int curentMinutes; //Промежуточная переменная, в которую записывается количество минут, оставшихся до восстановления энергии 
     private bool RegenGo = false; //Переменная, определяющая запускать регенерацию или нет в зависимости от потребности (когда запас энергии полный)
 
+    public GameObject LocationSprite;
+
     void Start()
     {
         slider.GetComponent<Slider>().maxValue = MaxValueEnergy; //сообщаю слайдеру, что его максимальное значение должно быть равно указанному в соответствующей переменной значению
@@ -43,6 +45,7 @@ public class CameraMove : MonoBehaviour
         }
     }
 
+    
     // Update is called once per frame
     void FixedUpdate()
     {
@@ -95,14 +98,16 @@ public class CameraMove : MonoBehaviour
 
     }
 
+    
+
     private void SetTargetPosition()
     {
         
         
-        //RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10)), Vector2.zero);
+        
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        //if (hit.collider != null)
+        
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit))
         {
@@ -120,6 +125,7 @@ public class CameraMove : MonoBehaviour
                     {
                         CurentEnergy -= 1;
                         textNumberEnergy.GetComponent<Text>().text = CurentEnergy.ToString();
+                        LocationSprite.GetComponent<SpriteRenderer>().sprite = hit.transform.GetComponent<SpriteRenderer>().sprite;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
                     }
 
