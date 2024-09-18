@@ -1,17 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst.CompilerServices;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-/*
-public class TetrisInventoryCheckFullForItem : MonoBehaviour
+
+public class ArtursVersionInventoryCode : MonoBehaviour
 {
     public GameObject[] PointsForCheck;
 
     private bool CanAttache = true;
     private bool TextTimer = false;
     private Vector3 FirstCellPosition;
+    private GameObject FirstCell;
     private Vector3 BeginPosition;
-    
+
 
     public Vector3 ShiftAttach;
     public GameObject TextMessage;
@@ -23,102 +26,58 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
 
     public bool PlayerMove = false;
     public bool GameMove;
-    private bool wasAttached = false;
+    private bool checkAttach = false;
 
-    public Transform[] arrayOfCells;
-    public GameObject [] parentOfCells = new GameObject[2];
+    public Transform[] arrayOfCells;// Массив, в который записываем трансформы дочерних клеток рассматриваемого родителя, к которому пытаемся присоединить айтем
+    public GameObject[] parentOfCells = new GameObject[2];// массив с объектами родителей, к которым будем пытаться присоединить айтем
     int g = 0;
 
     private bool startClearCellsOnUnattache = false;
 
+    private void attachAtCell(Vector3 cellPosition)
+    {
+        transform.SetParent(parentOfCells[0].transform.parent.transform); 
+
+        RaycastHit hit;
+        for (int pointForCheckIndex = 0; pointForCheckIndex < PointsForCheck.Length; pointForCheckIndex++) // проходимся по точкам для рейкаста
+        {
+            if (Physics.Raycast(PointsForCheck[pointForCheckIndex].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
+            {
+                var cellComponent = hit.transform.GetComponent<CellFullOrNot>();
+                if (cellComponent != null)
+                {
+                    cellComponent.IsFull = true;
+                    //Debug.Log(hit.transform.name);
+                }
+
+            }
+        }
+    }//Заполняем занятые ячейки и устанавливаем родителя
+
+
     private void Start()
     {
-        
+
         parentOfCells[0] = GameObject.Find("BackpackLVL1");
         parentOfCells[1] = GameObject.Find("LocationStoreLvl1");
         mainCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
         //TextMessage = GameObject.Find("TextLeftDownInfo");
         //TextMessage.SetActive(false);
-        arrayOfCells = new Transform[parentOfCells[0].transform.childCount];//заполняем массив трансформами ячеек рюкзака
-        
+        arrayOfCells = new Transform[parentOfCells[0].transform.childCount];// Присваиваем массиву трансформов размер, соответствуюий количеству детей инвенторя
 
-        if (PlayerMove)
+
+        CanAttache = true;
+        //Заполнение ячеек при старте
+
+
+        if (!GameMove)
         {
-
-            Vector3 mouseWorldPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);//вообще не помню для чего надо
-
-
-            for (int i = 0; i < PointsForCheck.Length; i++)
-            {
-
-                if (i == PointsForCheck.Length - 1)
-                {
-                    CanAttache = true;
-                }
-
-                RaycastHit hit;
-                if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-                {
-
-                    if (i == 0)
-                    {
-                        FirstCellPosition = hit.transform.position;
-
-                    }
-
-                    if (hit.transform.GetComponent<CellFullOrNot>() != null)
-                    {
-                        if (hit.transform.GetComponent<CellFullOrNot>().IsFull)
-                        {
-                            CanAttache = false;
-                            transform.position = BeginPosition;
-                            Debug.Log("Check breaked");
-                            TextMessage.SetActive(true);
-                            TextTimer = true;
-                            TextMessage.GetComponent<Text>().text = "You can't to attache it there";
-                            break;
-                        }
-                    }
-
-
-
-                    else
-                    {
-                        TextMessage.SetActive(true);
-                        TextTimer = true;
-                        TextMessage.GetComponent<Text>().text = "You can't to attache it there";
-                        CanAttache = false;
-                        transform.position = BeginPosition;
-                        break;
-                    }
-                    hit.transform.GetComponent<CellFullOrNot>().IsFull = true;
-                }
-
-
-            }
-        }//Код который на текущий момент нигде не вызывается, был нужен для момента, когда игрок перетаскивает предмет
-
-        if (CanAttache)
-        {
-            //transform.position = FirstCellPosition + ShiftAttach;
-            for (int i = 0; i < PointsForCheck.Length; i++)
-            {
-                RaycastHit hit;
-                if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-                {
-                    if (hit.transform.GetComponent<CellFullOrNot>() != null)
-                    {
-                        hit.transform.GetComponent<CellFullOrNot>().IsFull = true;
-                    }
-                }
-                //CanAttache = false;
-                PlayerMove = false;
-            }
-        }// пройтись по проверочным точкам и заполнить ячейки
+            attachAtCell(transform.position - ShiftAttach);//Заполняем занятые ячейки и устанавливаем родителя
+        }
 
         if (GameMove)
         {
-            for (int j = 0; j < arrayOfCells.Length; j++)//в данном случае проходимся по ячейкам рюкзака
+            for (int j = 0; j < arrayOfCells.Length; j++)//Заполняем массив с ячейками рюкзака
             {
                 foreach (Transform t in parentOfCells[0].transform)
                 {
@@ -127,92 +86,57 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                 g = 0;
             }
 
-            for (int j = 0; j < arrayOfCells.Length; j++)// в данном случае проходимся по ячейкам рюкзака
+            bool checkAttach1 = false;
+            for (int cellArrayIndex = 0; cellArrayIndex < arrayOfCells.Length; cellArrayIndex++)//Проходимся по заполненному миссиву ячеек рюкзака
             {
-                if (arrayOfCells[j].gameObject.GetComponent<CellFullOrNot>() != null)
-                    
+
+                var cellComponent1 = arrayOfCells[cellArrayIndex].gameObject.GetComponent<CellFullOrNot>(); //Получаем текущую ячейку
+                if (cellComponent1 != null && !cellComponent1.IsFull)//Здесь нашли пустую ячейку
                 {
-                    
-                    if (!arrayOfCells[j].gameObject.GetComponent<CellFullOrNot>().IsFull)//выполняем проверку на рамер айтема, как только нашли пустую ячейку
+                    checkAttach1 = true;
+                    Debug.Log("Пустая ячейка найдена");
+
+                    transform.position = arrayOfCells[cellArrayIndex].position + ShiftAttach + new Vector3(0, 0, -0.19f); //Переместили предмет чтобы проверить рейкасты
+
+                    RaycastHit hit;
+                    for (int i = 0; i < PointsForCheck.Length; i++)
                     {
-                        
-                        transform.position = arrayOfCells[j].position + ShiftAttach + new Vector3 (0,0,-0.19f);
-                        for (int i = 0; i < PointsForCheck.Length; i++)
+
+                        if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
                         {
-
-                            RaycastHit hit;
-                            if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
+                            if (i == 0)
                             {
-                                
-                                if (i == 0)
-                                {
-                                    FirstCellPosition = hit.transform.position;
+                                FirstCellPosition = hit.transform.position;
+                            }
 
-                                }
-
-                                if (hit.transform.GetComponent<CellFullOrNot>() != null)
-                                {
-                                    
-                                    if (hit.transform.GetComponent<CellFullOrNot>().IsFull)
-                                    {
-                                        wasAttached = false;
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        if (i == PointsForCheck.Length - 1)
-                                        {
-                                            for (int e = 0; e < PointsForCheck.Length; e++)
-                                            {
-                                                if (Physics.Raycast(PointsForCheck[e].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-                                                {
-                                                    hit.transform.GetComponent<CellFullOrNot>().IsFull = true;
-                                                    Debug.Log(hit.transform.name);
-                                                }
-                                            }
-                                            wasAttached = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                
+                            var cellComponent = hit.transform.GetComponent<CellFullOrNot>(); //Проверка что рейкаст нашел имнено ячейку
+                            if (cellComponent == null || cellComponent.IsFull)
+                            {
+                                checkAttach1 = false;
+                                break;
                             }
                         }
-                        if (wasAttached)
-                        {
-
-                            transform.SetParent(parentOfCells[0].transform);
-                            transform.position = FirstCellPosition + ShiftAttach + new Vector3(0, 0, -0.19f);
-                            //wasAttached = false;
-                            break;
-                        }
-                        else
-                        {
-                            if (j == arrayOfCells.Length - 1)
-                            {
-                                Debug.Log("BackPack is full");
-                            }
-                        }
-
-
-
-
-                    }//выполняем проверку на рамер айтема, как только нашли пустую ячейку
+                    }
                 }
+                if (checkAttach1)
+                    break;
 
-                //transform.SetParent(parentOfCells[0].transform.parent.transform);
-
-                *//*foreach (Transform t in transform)
-                {
-                    arrayOfCells[g++] = t;
-                }
-                g = 0;*//*
             }//проходимся по ячейкам рюкзака в поисках пустых, и если находим подходящий размер, присоединяем туда айтем
 
-
-            if (!wasAttached)
+            if (checkAttach1)
             {
+                attachAtCell(FirstCellPosition);
+            }
+            else
+            {
+                Debug.Log("Места нет, удаляем предмет" + name);
+                Destroy(gameObject);
+            }
+            return;
 
+
+            if (!checkAttach)
+            {
                 arrayOfCells = new Transform[parentOfCells[1].transform.childCount];//заполняем массив трансформами ячеек склада
                 for (int j = 0; j < arrayOfCells.Length; j++)//в данном случае проходимся по ячейкам склада
                 {
@@ -224,27 +148,27 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                     g = 0;
                 }
 
-                *//*
+                /*
                                 for (int h = 0; h < arrayOfCells.Length; h++)
                                 {
-
+ 
                                     for (int i = 0; i < PointsForCheck.Length; i++)
                                     {
-
+ 
                                         if (i == PointsForCheck.Length - 1)
                                         {
                                             CanAttache = true;
                                         }
-
+ 
                                         RaycastHit hit;
                                         if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
                                         {
                                             if (i == 0)
                                             {
                                                 FirstCellPosition = hit.transform.position;
-
+ 
                                             }
-
+ 
                                             if (hit.transform.GetComponent<CellFullOrNot>() != null)
                                             {
                                                 if (hit.transform.GetComponent<CellFullOrNot>().IsFull)
@@ -257,9 +181,9 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                                                     break;
                                                 }
                                             }
-
-
-
+ 
+ 
+ 
                                             else
                                             {
                                                 CanAttache = false;
@@ -269,24 +193,24 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                                                 TextMessage.GetComponent<Text>().text = "You can't to attache it there";
                                                 break;
                                             }
-
+ 
                                             hit.transform.GetComponent<CellFullOrNot>().IsFull = true;
                                             transform.position = arrayOfCells[h].position + ShiftAttach;
                                             Debug.Log("Was transpotrt on H");
                                             wasAttached = true;
-
+ 
                                         }
                                     }
-
+ 
                                     if (wasAttached)
                                     {
                                         Debug.Log("Item attach to inventory");
                                         transform.SetParent(parentOfCells[1].transform);
                                         break;
                                     }
-
-
-                                }*//*
+ 
+ 
+                                }*/
                 for (int j = 0; j < arrayOfCells.Length; j++)// в данном случае проходимся по ячейкам рюкзака
                 {
                     if (arrayOfCells[j].gameObject.GetComponent<CellFullOrNot>() != null)
@@ -310,17 +234,17 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                                     {
                                         if (hit.transform.GetComponent<CellFullOrNot>().IsFull)
                                         {
-                                            wasAttached = false;
+                                            checkAttach = false;
                                             break;
                                         }
                                         else
                                         {
-                                            wasAttached = true;
+                                            checkAttach = true;
                                         }
                                     }
                                 }
                             }
-                            if (wasAttached)
+                            if (checkAttach)
                             {
                                 transform.SetParent(parentOfCells[0].transform);
                                 transform.position = FirstCellPosition + ShiftAttach;
@@ -341,28 +265,28 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                         }
                     }
                 }
-                wasAttached = false;
+                checkAttach = false;
             }
-            *//* for (int h = 0; h < arrayOfCells.Length; h++)
+            /* for (int h = 0; h < arrayOfCells.Length; h++)
              {
-
+ 
                  for (int i = 0; i < PointsForCheck.Length; i++)
                  {
-
+ 
                      if (i == PointsForCheck.Length - 1)
                      {
                          CanAttache = true;
                      }
-
+ 
                      RaycastHit hit;
                      if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
                      {
                          if (i == 0)
                          {
                              FirstCellPosition = hit.transform.position;
-
+ 
                          }
-
+ 
                          if (hit.transform.GetComponent<CellFullOrNot>() != null)
                          {
                              if (hit.transform.GetComponent<CellFullOrNot>().IsFull)
@@ -376,9 +300,9 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                                  break;
                              }
                          }
-
-
-
+ 
+ 
+ 
                          else
                          {
                              CanAttache = false;
@@ -392,17 +316,17 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                          hit.transform.GetComponent<CellFullOrNot>().IsFull = true;
                          transform.position = arrayOfCells[h].position + ShiftAttach;
                          wasAttached = true;
-
+ 
                      }
                  }
-
+ 
                  if (wasAttached)
                  {
                      Debug.Log("Item attach to inventory");
                      transform.SetParent(parentOfCells[0].transform);
                      break;
                  }
-
+ 
              }*/
 
 
@@ -411,16 +335,14 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
 
             /*if (CanAttache)
             {
-
+ 
                 transform.position = FirstCellPosition + ShiftAttach;
-            }*//*
+            }*/
             CanAttache = true;
             GameMove = false;
         }//Если код вызывается через спаун клона
 
-                a = TextDelay;
-        GameMove = false;
-
+        //a = TextDelay;
     }
     private void FixedUpdate()
     {
@@ -432,8 +354,8 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
 
     private void TextOffInTime()
     {
-        
-         a = a - Time.deltaTime;
+
+        a = a - Time.deltaTime;
         if (a <= 0)
         {
             TextMessage.SetActive(false);
@@ -467,11 +389,11 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
     }
     private void OnMouseDrag()
     {
-        
-        
+
+
         Vector3 mouseWorldPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         mouseWorldPosition.z = 0.1f;
-        transform.position = mouseWorldPosition - new Vector3 (0f, 0f, 4.91f);
+        transform.position = mouseWorldPosition - new Vector3(0f, 0f, 4.91f);
         startClearCellsOnUnattache = true;
         ClearCellsOnUnattache();
     }
@@ -483,9 +405,8 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
     private void OnMouseUp()
     {
         CanAttache = false;
-        Vector3 mouseWorldPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         for (int i = 0; i < PointsForCheck.Length; i++)
-        {         
+        {
 
             RaycastHit hit;
             if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
@@ -511,7 +432,7 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                         {
 
                             forSetParen = hit.transform.parent.gameObject.transform.parent.gameObject;
-                            
+
                             //Debug.Log(forSetParen.name);
                             CanAttache = true;
                         }
@@ -523,7 +444,7 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
 
                     }
                 }
-                
+
 
 
             }
@@ -536,10 +457,10 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
                 transform.position = BeginPosition;
                 break;
             }
-            
+
 
         }
-        if (CanAttache) 
+        if (CanAttache)
         {
             for (int i = 0; i < PointsForCheck.Length; i++)
             {
@@ -556,8 +477,8 @@ public class TetrisInventoryCheckFullForItem : MonoBehaviour
             transform.position = FirstCellPosition + ShiftAttach + new Vector3(0, 0, -0.19f);
         }
         CanAttache = false;
-        
+
     }
 
-    
-}*/
+
+}

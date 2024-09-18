@@ -85,35 +85,40 @@ public class ButtonInteract : MonoBehaviour
         
         Debug.Log(d);
 
-        switch (d)
+        if (d < 5)
+        {
+            ItemsPrefabs[d].GetComponent<ArtursVersionInventoryCode>().GameMove = true;
+            Instantiate(ItemsPrefabs[d], firstInventoryTryAttache.transform, m);
+        }
+
+        /*switch (d)
         {
             case 0:
-                ItemsPrefabs[d].GetComponent<TetrisInventoryCheckFullForItem>().GameMove = true;
-                Instantiate(ItemsPrefabs[d], firstInventoryTryAttache.transform, m);
+                
                 break;
             case 1:
-                ItemsPrefabs[d].GetComponent<TetrisInventoryCheckFullForItem>().GameMove = true;
+                ItemsPrefabs[d].GetComponent<ArtursVersionInventoryCode>().GameMove = true;
                 Instantiate(ItemsPrefabs[d], firstInventoryTryAttache.transform, m);
                 break;
             case 2:
-                ItemsPrefabs[d].GetComponent<TetrisInventoryCheckFullForItem>().GameMove = true;
+                ItemsPrefabs[d].GetComponent<ArtursVersionInventoryCode>().GameMove = true;
                 Instantiate(ItemsPrefabs[d], firstInventoryTryAttache.transform, m);
                 break;
             case 3:
-                ItemsPrefabs[d].GetComponent<TetrisInventoryCheckFullForItem>().GameMove = true;
+                ItemsPrefabs[d].GetComponent<ArtursVersionInventoryCode>().GameMove = true;
                 Instantiate(ItemsPrefabs[d], firstInventoryTryAttache.transform, m);
                 break;
             case 4:
-                ItemsPrefabs[d].GetComponent<TetrisInventoryCheckFullForItem>().GameMove = true;
+                ItemsPrefabs[d].GetComponent<ArtursVersionInventoryCode>().GameMove = true;
                 Instantiate(ItemsPrefabs[d], firstInventoryTryAttache.transform, m);
                 break;
             case 5:
-                ItemsPrefabs[d].GetComponent<TetrisInventoryCheckFullForItem>().GameMove = true;
+                ItemsPrefabs[d].GetComponent<ArtursVersionInventoryCode>().GameMove = true;
                 Instantiate(ItemsPrefabs[d], firstInventoryTryAttache.transform, m);
                 break;
             default:
                 break;
-        }
+        }*/
     }
 
 
