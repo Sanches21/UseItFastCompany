@@ -5,10 +5,11 @@ using UnityEngine.UI;
 
 public class CameraMove : MonoBehaviour
 {
+    public GameObject CurrentLocPlayerStay;//локация на которой игрок находится. Заполняется сперва в мап генератор, а потом в камера мув (здесь)
     private Vector3 TargetPosition;//Переменная с координатами объекта, к которому мы стремимся двигать объект с привязанной камерой (читай на который стремится двигаться игрок)
     private bool IsMoving;//переменная, которая обозначает, происходит движение игрока или нет
     public int CurentEnergy; //Текущее количество энергии у игрока, публичное, что бы можно было из других скриптов менять его
-    private bool TextTimer = false;//определяет, запускается таймер на закрытие окна сообщения или пока отключен
+    public bool TextTimer = false;//определяет, запускается таймер на закрытие окна сообщения или пока отключен
 
     public GameObject slider; //Ссылка на объект, содержащий слайдер, отображающий запас энергии
     public GameObject textNumberEnergy; //Ссылка на объект-текст, который отображает текущий запас энергии
@@ -27,6 +28,7 @@ public class CameraMove : MonoBehaviour
 
     void Start()
     {
+        TargetPosition = transform.position;
         slider.GetComponent<Slider>().maxValue = MaxValueEnergy; //сообщаю слайдеру, что его максимальное значение должно быть равно указанному в соответствующей переменной значению
         CurentEnergy = MaxValueEnergy; //При старте игры текущая энергия игрока становится максимальной
         a = TextDelay;
@@ -68,7 +70,9 @@ public class CameraMove : MonoBehaviour
 
         
 
-        slider.GetComponent<Slider>().value = CurentEnergy;
+        slider.GetComponent<Slider>().value = CurentEnergy;// Эта строчка важна, всё время сверяет, что бы значение слайдера совпадало с переменной
+        textNumberEnergy.GetComponent<Text>().text = CurentEnergy.ToString();
+
         if (Input.GetMouseButton(0))
         {
 
@@ -115,32 +119,33 @@ public class CameraMove : MonoBehaviour
             TargetPosition = hit.transform.position + new Vector3(0, 0.5f, 0);
             if (Vector3.Distance(transform.position, TargetPosition + new Vector3(0.6f, 0, 0)) <= 1.5f || Vector3.Distance(transform.position, TargetPosition - new Vector3(0.6f, 0, 0)) <= 1.5f)
             {
-
-                
-
                 if (Vector3.Distance(transform.position, TargetPosition) >= 0.5f)
                 {
                     IsMoving = true;
+                    
                     if (CurentEnergy > 0)
                     {
+                        CurrentLocPlayerStay.GetComponent<SpriteRenderer>().color = Color.white;
+                        CurrentLocPlayerStay = hit.transform.gameObject;
+                        CurrentLocPlayerStay.GetComponent<SpriteRenderer>().color = Color.blue;
                         CurentEnergy -= 1;
                         textNumberEnergy.GetComponent<Text>().text = CurentEnergy.ToString();
                         LocationSprite.GetComponent<SpriteRenderer>().sprite = hit.transform.GetComponent<SpriteRenderer>().sprite;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+                        CurrentLocPlayerStay = hit.transform.gameObject;
                     }
 
                     else
                     {
-                        TextMessage.SetActive(true);
-                        TextMessage.GetComponent<Text>().text = "You heaven't Energy";
-                        TextTimer = true;
-                        IsMoving = false;
+
                     }
                 }
             }
             else
             {
-
+                TextMessage.SetActive(true);
+                TextMessage.GetComponent<Text>().text = "This location to far";
+                TextTimer = true;
+                IsMoving = false;
             }
             
         }

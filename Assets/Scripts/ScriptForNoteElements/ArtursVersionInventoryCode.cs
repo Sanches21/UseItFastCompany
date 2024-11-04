@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Burst.CompilerServices;
@@ -8,13 +9,13 @@ using UnityEngine.UI;
 public class ArtursVersionInventoryCode : MonoBehaviour
 {
     public GameObject[] PointsForCheck;
+    private List<Transform> pointsForCheck = new List<Transform>();
+    private GameObject CurrentLocPlayerStayThis;
 
-    private bool CanAttache = true;
     private bool TextTimer = false;
-    private Vector3 FirstCellPosition;
-    private GameObject FirstCell;
     private Vector3 BeginPosition;
 
+    private string textForTextOffInTime;
 
     public Vector3 ShiftAttach;
     public GameObject TextMessage;
@@ -22,463 +23,217 @@ public class ArtursVersionInventoryCode : MonoBehaviour
     private float a;
     [SerializeField] private Camera mainCamera;
 
-    private GameObject forSetParen;
 
     public bool PlayerMove = false;
     public bool GameMove;
-    private bool checkAttach = false;
 
-    public Transform[] arrayOfCells;// Массив, в который записываем трансформы дочерних клеток рассматриваемого родителя, к которому пытаемся присоединить айтем
+    public Transform inventoryParent;
+    public GameObject playerBackpack;
     public GameObject[] parentOfCells = new GameObject[2];// массив с объектами родителей, к которым будем пытаться присоединить айтем
-    int g = 0;
 
-    private bool startClearCellsOnUnattache = false;
+    
+    private RaycastHit hit;
 
-    private void attachAtCell(Vector3 cellPosition)
+
+    //Вставить предмет в ячейку под собой
+    private void attachAtCell()
     {
-        transform.SetParent(parentOfCells[0].transform.parent.transform); 
+        Vector3 attachablePointPosition = pointsForCheck[0].position;
+        Physics.Raycast(attachablePointPosition, new Vector3(0, 0, 1f), out hit, 1f);
+        Vector3 attachingCellPosition = hit.transform.position;
+        transform.position = attachingCellPosition + ShiftAttach + new Vector3(0, 0, -0.19f);
 
-        RaycastHit hit;
-        for (int pointForCheckIndex = 0; pointForCheckIndex < PointsForCheck.Length; pointForCheckIndex++) // проходимся по точкам для рейкаста
+
+        foreach (var rayCastPoint in pointsForCheck)
         {
-            if (Physics.Raycast(PointsForCheck[pointForCheckIndex].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
+            Physics.Raycast(rayCastPoint.position, new Vector3(0, 0, 1f), out hit, 1f);
+            var cellComponent = hit.transform.GetComponent<CellFullOrNot>();
+            cellComponent.IsFull = true;
+        }
+        
+        transform.SetParent(hit.transform.parent.transform.parent);//Ещё одно из моих исправлений кода Артура
+        if (transform.parent.tag == "LocStore")
+        {
+            CurrentLocPlayerStayThis.GetComponent<LocationInfoAndMouseEnter>().ItemStoreOnLocationIndex.Add(transform.GetComponent<ItemInfo>().ItemIndex);//Надо вместо массива заюзать лист/список
+            Debug.Log(CurrentLocPlayerStayThis.GetComponent<LocationInfoAndMouseEnter>().ItemStoreOnLocationIndex.Count);
+            if (CurrentLocPlayerStayThis.GetComponent<LocationInfoAndMouseEnter>().ItemStoreOnLocationIndex.Count == 5)
             {
-                var cellComponent = hit.transform.GetComponent<CellFullOrNot>();
-                if (cellComponent != null)
-                {
-                    cellComponent.IsFull = true;
-                    //Debug.Log(hit.transform.name);
-                }
-
+                CurrentLocPlayerStayThis.GetComponent<LocationInfoAndMouseEnter>().ItemStoreOnLocationIndex.Clear();
             }
         }
-    }//Заполняем занятые ячейки и устанавливаем родителя
+
+
+    }
+
+
+    //Проверить что можно вставить предмет в ячейку под собой
+    private bool checkCanAttachAtCell()
+    {
+        foreach (var rayCastPoint in pointsForCheck)
+        {
+            if (Physics.Raycast(rayCastPoint.position, new Vector3(0, 0, 1f), out hit, 1f))
+            {
+                var cellIsFullComponent = hit.transform.GetComponent<CellFullOrNot>(); //Проверка что рейкаст нашел имнено ячейку
+                if (cellIsFullComponent == null || cellIsFullComponent.IsFull)
+                {
+                    //Debug.Log("На луче " + rayCastPoint.gameObject.name + " не найдена ячейка или она заполнена");
+                    return false;
+                }
+            }
+            else //Рейкаст не нашел вообще ничего
+                return false;
+        }
+        return true;
+    }
 
 
     private void Start()
     {
+        CurrentLocPlayerStayThis = GameObject.Find("PlayerScreenCenter").GetComponent<CameraMove>().CurrentLocPlayerStay;
 
-        parentOfCells[0] = GameObject.Find("BackpackLVL1");
+        a = 1.5f;
+        playerBackpack = GameObject.Find("BackpackLvl1");
         parentOfCells[1] = GameObject.Find("LocationStoreLvl1");
+        inventoryParent = playerBackpack.transform.parent;
         mainCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
         //TextMessage = GameObject.Find("TextLeftDownInfo");
         //TextMessage.SetActive(false);
-        arrayOfCells = new Transform[parentOfCells[0].transform.childCount];// Присваиваем массиву трансформов размер, соответствуюий количеству детей инвенторя
+        transform.SetParent(inventoryParent, true);
 
-
-        CanAttache = true;
-        //Заполнение ячеек при старте
-
-
-        if (!GameMove)
+        foreach (Transform rayCastPoint in transform)
         {
-            attachAtCell(transform.position - ShiftAttach);//Заполняем занятые ячейки и устанавливаем родителя
+            pointsForCheck.Add(rayCastPoint);
         }
 
-        if (GameMove)
+
+        if (!GameMove)//делаем во время ручного перемещения
         {
-            for (int j = 0; j < arrayOfCells.Length; j++)//Заполняем массив с ячейками рюкзака
+            attachAtCell();//Заполняем занятые ячейки и устанавливаем родителя
+        }
+
+        if (GameMove)// Делаем во время спауна предмета кнопкой
+        {
+
+            bool checkAttach = false;
+
+            foreach (Transform cellTransform in playerBackpack.transform) //Проходимся по заполненному миссиву ячеек рюкзака
             {
-                foreach (Transform t in parentOfCells[0].transform)
-                {
-                    arrayOfCells[g++] = t;
-                }
-                g = 0;
-            }
+                var cellComponent = cellTransform.gameObject.GetComponent<CellFullOrNot>(); //Получаем текущую ячейку
 
-            bool checkAttach1 = false;
-            for (int cellArrayIndex = 0; cellArrayIndex < arrayOfCells.Length; cellArrayIndex++)//Проходимся по заполненному миссиву ячеек рюкзака
-            {
+                if (cellComponent.IsFull)
+                    continue;
 
-                var cellComponent1 = arrayOfCells[cellArrayIndex].gameObject.GetComponent<CellFullOrNot>(); //Получаем текущую ячейку
-                if (cellComponent1 != null && !cellComponent1.IsFull)//Здесь нашли пустую ячейку
-                {
-                    checkAttach1 = true;
-                    Debug.Log("Пустая ячейка найдена");
+                //Debug.Log("Пытаемся спавнить предмет на ячейке " + cellTransform);
+                transform.position = cellTransform.position + ShiftAttach + new Vector3(0, 0, -0.19f); //Переместили предмет чтобы проверить рейкасты
+                checkAttach = checkCanAttachAtCell();
 
-                    transform.position = arrayOfCells[cellArrayIndex].position + ShiftAttach + new Vector3(0, 0, -0.19f); //Переместили предмет чтобы проверить рейкасты
-
-                    RaycastHit hit;
-                    for (int i = 0; i < PointsForCheck.Length; i++)
-                    {
-
-                        if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-                        {
-                            if (i == 0)
-                            {
-                                FirstCellPosition = hit.transform.position;
-                            }
-
-                            var cellComponent = hit.transform.GetComponent<CellFullOrNot>(); //Проверка что рейкаст нашел имнено ячейку
-                            if (cellComponent == null || cellComponent.IsFull)
-                            {
-                                checkAttach1 = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (checkAttach1)
+                if (checkAttach)
                     break;
-
             }//проходимся по ячейкам рюкзака в поисках пустых, и если находим подходящий размер, присоединяем туда айтем
-
-            if (checkAttach1)
+            if (checkAttach)
             {
-                attachAtCell(FirstCellPosition);
+                attachAtCell();//Заполняем занятые ячейки и устанавливаем родителя
+                if (mainCamera.transform.parent.transform.GetComponent<CameraMove>().CurentEnergy != 0)
+                {
+                    GameObject.Find("Canvas/PlayerInfo/EnergySlider").transform.GetComponent<Slider>().value -= 1;
+
+                    //textNumberEnergy.GetComponent<Text>().text = CurentEnergy.ToString();
+                    mainCamera.transform.parent.transform.GetComponent<CameraMove>().CurentEnergy -= 1;
+                    
+                    //GameObject.Find("Canvas/LocInfo/") Здесь не дописано обращение к конкретной локации, что бы вычесть ресурс путём убавления переменной CurentResurse
+                }//Сюда вставлен код вычитания энергии, но пока не ресурса с локации   !!!!!!!             
             }
             else
             {
-                Debug.Log("Места нет, удаляем предмет" + name);
-                Destroy(gameObject);
+                textForTextOffInTime = "BackPack Is full, Item Was Delited";
+                Instantiate(TextMessage, GameObject.Find("Canvas").transform);
+                TextTimer = true;
+
+                //Debug.Log("Места нет, удаляем предмет" + name);
+                //Destroy(gameObject); //закомментировано потому что вставлен костыль в TextOffInTime. Предмет удалялся, не позволяя выполнить задержку сообщения о том, что предмет будет удалён. Далее лишнее существование объекта будет спрятано за "экраном перехода/ожидания"
             }
             return;
-
-
-            if (!checkAttach)
-            {
-                arrayOfCells = new Transform[parentOfCells[1].transform.childCount];//заполняем массив трансформами ячеек склада
-                for (int j = 0; j < arrayOfCells.Length; j++)//в данном случае проходимся по ячейкам склада
-                {
-                    //transform.SetParent(parentOfCells[1].transform.parent.transform);
-                    foreach (Transform t in parentOfCells[1].transform)
-                    {
-                        arrayOfCells[g++] = t;
-                    }
-                    g = 0;
-                }
-
-                /*
-                                for (int h = 0; h < arrayOfCells.Length; h++)
-                                {
- 
-                                    for (int i = 0; i < PointsForCheck.Length; i++)
-                                    {
- 
-                                        if (i == PointsForCheck.Length - 1)
-                                        {
-                                            CanAttache = true;
-                                        }
- 
-                                        RaycastHit hit;
-                                        if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-                                        {
-                                            if (i == 0)
-                                            {
-                                                FirstCellPosition = hit.transform.position;
- 
-                                            }
- 
-                                            if (hit.transform.GetComponent<CellFullOrNot>() != null)
-                                            {
-                                                if (hit.transform.GetComponent<CellFullOrNot>().IsFull)
-                                                {
-                                                    CanAttache = false;
-                                                    transform.position = BeginPosition;
-                                                    TextMessage.SetActive(true);
-                                                    TextTimer = true;
-                                                    TextMessage.GetComponent<Text>().text = "You can't to attache it there";
-                                                    break;
-                                                }
-                                            }
- 
- 
- 
-                                            else
-                                            {
-                                                CanAttache = false;
-                                                transform.position = BeginPosition;
-                                                TextMessage.SetActive(true);
-                                                TextTimer = true;
-                                                TextMessage.GetComponent<Text>().text = "You can't to attache it there";
-                                                break;
-                                            }
- 
-                                            hit.transform.GetComponent<CellFullOrNot>().IsFull = true;
-                                            transform.position = arrayOfCells[h].position + ShiftAttach;
-                                            Debug.Log("Was transpotrt on H");
-                                            wasAttached = true;
- 
-                                        }
-                                    }
- 
-                                    if (wasAttached)
-                                    {
-                                        Debug.Log("Item attach to inventory");
-                                        transform.SetParent(parentOfCells[1].transform);
-                                        break;
-                                    }
- 
- 
-                                }*/
-                for (int j = 0; j < arrayOfCells.Length; j++)// в данном случае проходимся по ячейкам рюкзака
-                {
-                    if (arrayOfCells[j].gameObject.GetComponent<CellFullOrNot>() != null)
-                    {
-                        if (!arrayOfCells[j].gameObject.GetComponent<CellFullOrNot>().IsFull)//выполняем проверку на рамер айтема, как только нашли пустую ячейку
-                        {
-                            for (int i = 0; i < PointsForCheck.Length; i++)
-                            {
-
-                                RaycastHit hit;
-                                if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-                                {
-
-                                    if (i == 0)
-                                    {
-                                        FirstCellPosition = hit.transform.position;
-
-                                    }
-
-                                    if (hit.transform.GetComponent<CellFullOrNot>() != null)
-                                    {
-                                        if (hit.transform.GetComponent<CellFullOrNot>().IsFull)
-                                        {
-                                            checkAttach = false;
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            checkAttach = true;
-                                        }
-                                    }
-                                }
-                            }
-                            if (checkAttach)
-                            {
-                                transform.SetParent(parentOfCells[0].transform);
-                                transform.position = FirstCellPosition + ShiftAttach;
-                                //wasAttached = false;
-                                break;
-                            }
-                            else
-                            {
-                                if (j == arrayOfCells.Length - 1)
-                                {
-                                    Debug.Log("LocStore is full too");
-                                }
-                            }
-
-
-
-
-                        }
-                    }
-                }
-                checkAttach = false;
-            }
-            /* for (int h = 0; h < arrayOfCells.Length; h++)
-             {
- 
-                 for (int i = 0; i < PointsForCheck.Length; i++)
-                 {
- 
-                     if (i == PointsForCheck.Length - 1)
-                     {
-                         CanAttache = true;
-                     }
- 
-                     RaycastHit hit;
-                     if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-                     {
-                         if (i == 0)
-                         {
-                             FirstCellPosition = hit.transform.position;
- 
-                         }
- 
-                         if (hit.transform.GetComponent<CellFullOrNot>() != null)
-                         {
-                             if (hit.transform.GetComponent<CellFullOrNot>().IsFull)
-                             {
-                                 CanAttache = false;
-                                 transform.position = BeginPosition;
-                                 TextMessage.SetActive(true);
-                                 TextTimer = true;
-                                 TextMessage.GetComponent<Text>().text = "You can't to attache it there";
-                                 wasAttached = false;
-                                 break;
-                             }
-                         }
- 
- 
- 
-                         else
-                         {
-                             CanAttache = false;
-                             transform.position = BeginPosition;
-                             TextMessage.SetActive(true);
-                             TextTimer = true;
-                             TextMessage.GetComponent<Text>().text = "You can't to attache it there";
-                             wasAttached = false;
-                             break;
-                         }
-                         hit.transform.GetComponent<CellFullOrNot>().IsFull = true;
-                         transform.position = arrayOfCells[h].position + ShiftAttach;
-                         wasAttached = true;
- 
-                     }
-                 }
- 
-                 if (wasAttached)
-                 {
-                     Debug.Log("Item attach to inventory");
-                     transform.SetParent(parentOfCells[0].transform);
-                     break;
-                 }
- 
-             }*/
-
-
-
-
-
-            /*if (CanAttache)
-            {
- 
-                transform.position = FirstCellPosition + ShiftAttach;
-            }*/
-            CanAttache = true;
-            GameMove = false;
         }//Если код вызывается через спаун клона
-
-        //a = TextDelay;
     }
+
+
     private void FixedUpdate()
     {
         if (TextTimer)
         {
-            TextOffInTime();
+            TextOffInTime(textForTextOffInTime);
         }
     }
 
-    private void TextOffInTime()
+    private void TextOffInTime(string _text) //подправил эту функцию
     {
-
+        GameObject.Find("Canvas/TextLeftDownInfo(Clone)").transform.GetComponent<Text>().text = _text;
+        //TextMessage.GetComponent<Text>().text = _text;
         a = a - Time.deltaTime;
         if (a <= 0)
-        {
-            TextMessage.SetActive(false);
+        {            
+            if (textForTextOffInTime == "BackPack Is full, Item Was Delited")
+            {
+                TextTimer = false;
+                a = TextDelay;               
+                textForTextOffInTime = "";
+                Destroy(this.gameObject);
+            }
             TextTimer = false;
-            a = TextDelay;
+            a = TextDelay;            
+            Destroy(GameObject.Find("Canvas/TextLeftDownInfo(Clone)"));
         }
     }
 
-    private void ClearCellsOnUnattache()
+    private void ClearCellsOnUnattach()
     {
-        if (startClearCellsOnUnattache)
+        foreach (var rayCastPoint in pointsForCheck)
         {
-            for (int i = 0; i < PointsForCheck.Length; i++)
-            {
-                RaycastHit hit;
-                if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-                {
-                    if (hit.transform.GetComponent<CellFullOrNot>() != null)
-                    {
-                        hit.transform.GetComponent<CellFullOrNot>().IsFull = false;
-                    }
-                }
-            }
-            startClearCellsOnUnattache = false;
+            Physics.Raycast(rayCastPoint.position, new Vector3(0, 0, 1f), out hit, 1f);
+            hit.transform.GetComponent<CellFullOrNot>().IsFull = false;
         }
     }
 
     private void OnMouseDown()
     {
         BeginPosition = transform.position;
+        ClearCellsOnUnattach();
     }
+
     private void OnMouseDrag()
     {
-
-
         Vector3 mouseWorldPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         mouseWorldPosition.z = 0.1f;
         transform.position = mouseWorldPosition - new Vector3(0f, 0f, 4.91f);
-        startClearCellsOnUnattache = true;
-        ClearCellsOnUnattache();
+        SelectCells();
     }
-    private void OnMouseOver()
-    {
 
+    private void SelectCells()
+    {
+        if (!checkCanAttachAtCell()) return;
+
+        foreach (var rayCastPoint in pointsForCheck)
+        {
+            Physics.Raycast(rayCastPoint.position, new Vector3(0, 0, 1f), out hit, 1f);
+            hit.transform.GetComponent<CellFullOrNot>().Select();
+        }
     }
+
+    //private void OnMouseOver()
+    //{
+
+    //}
 
     private void OnMouseUp()
     {
-        CanAttache = false;
-        for (int i = 0; i < PointsForCheck.Length; i++)
+        if (!checkCanAttachAtCell())
         {
-
-            RaycastHit hit;
-            if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-            {
-                Debug.Log("is hit spown");
-
-                if (hit.transform.GetComponent<CellFullOrNot>() != null)
-                {
-                    if (hit.transform.GetComponent<CellFullOrNot>().IsFull)
-                    {
-                        Debug.Log("is hit");
-                        CanAttache = false;
-                        transform.position = BeginPosition;
-                        Debug.Log("Check breaked");
-                        TextMessage.SetActive(true);
-                        TextTimer = true;
-                        TextMessage.GetComponent<Text>().text = "You can't to attache it there";
-                        break;
-                    }
-                    else
-                    {
-                        if (i == PointsForCheck.Length - 1)
-                        {
-
-                            forSetParen = hit.transform.parent.gameObject.transform.parent.gameObject;
-
-                            //Debug.Log(forSetParen.name);
-                            CanAttache = true;
-                        }
-
-                        if (i == 0)
-                        {
-                            FirstCellPosition = hit.transform.position;
-                        }
-
-                    }
-                }
-
-
-
-            }
-            else
-            {
-                TextMessage.SetActive(true);
-                TextTimer = true;
-                TextMessage.GetComponent<Text>().text = "You can't to attache it there";
-                CanAttache = false;
-                transform.position = BeginPosition;
-                break;
-            }
-
-
+            transform.position = BeginPosition;
+            textForTextOffInTime = "You can't to attache it there";
+            Instantiate(TextMessage, GameObject.Find("Canvas").transform);
+            TextTimer = true;
         }
-        if (CanAttache)
-        {
-            for (int i = 0; i < PointsForCheck.Length; i++)
-            {
-                RaycastHit hit;
-                if (Physics.Raycast(PointsForCheck[i].transform.position, new Vector3(0, 0, 1f), out hit, 1f))
-                {
-                    if (hit.transform.GetComponent<CellFullOrNot>() != null)
-                    {
-                        hit.transform.GetComponent<CellFullOrNot>().IsFull = true;
-                    }
-                }
-            }
-            transform.SetParent(forSetParen.transform);
-            transform.position = FirstCellPosition + ShiftAttach + new Vector3(0, 0, -0.19f);
-        }
-        CanAttache = false;
-
+        attachAtCell();
     }
-
-
 }
+

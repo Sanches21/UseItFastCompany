@@ -1,22 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ButtonInteract : MonoBehaviour
 {
 
     public GameObject[] ObjectForInteract;
-    public GameObject[] ItemsPrefabs;
+    public GameObject ItemsPrefabsArrayObject;
 
     private string names = "empty";
     private float numberOfLoot;
 
     public GameObject firstInventoryTryAttache;
 
-    float a;
-    float b;
-    float c;
-    int d;
     bool m = false;
     private void OnMouseDown()
     {
@@ -38,6 +35,7 @@ public class ButtonInteract : MonoBehaviour
                 ObjectForInteract[2].SetActive(false);
                 ObjectForInteract[1].SetActive(true);
                 ObjectForInteract[3].SetActive(true);
+                ObjectForInteract[5].SetActive(true);
                 break;
             case "LocInfo":
                 ObjectForInteract[1].SetActive(false);
@@ -47,8 +45,10 @@ public class ButtonInteract : MonoBehaviour
                 LootGeneration();
                 break;
             case "ToogleBackPack":
-                ObjectForInteract[4].SetActive(false);
+                ObjectForInteract[1].SetActive(true);
                 ObjectForInteract[3].SetActive(true);
+                ObjectForInteract[4].SetActive(false);
+                ObjectForInteract[5].SetActive(false);
                 break;
             case "ToogleLocInfo":
                 ObjectForInteract[3].SetActive(false);
@@ -76,19 +76,20 @@ public class ButtonInteract : MonoBehaviour
 
     private void LootGeneration()
     {
-        numberOfLoot = Random.Range(0.000001f, 1);
-        a = numberOfLoot * 10000000;
-        //Debug.Log(a);
-        b = a;
-        c = a - (b - (a % 10f));
-        d = (int)c;
-        
-        Debug.Log(d);
+        int LootPrefabIndex = Random.Range(0, 10);
 
-        if (d < 5)
+        Debug.Log(LootPrefabIndex);
+        if (GameObject.Find("PlayerScreenCenter").transform.GetComponent<CameraMove>().CurentEnergy > 0)
         {
-            ItemsPrefabs[d].GetComponent<ArtursVersionInventoryCode>().GameMove = true;
-            Instantiate(ItemsPrefabs[d], firstInventoryTryAttache.transform, m);
+            ItemsPrefabsArrayObject.GetComponent<PrefabArrayStore>().ItemsPrefabs[LootPrefabIndex].GetComponent<ArtursVersionInventoryCode>().GameMove = true;
+            Instantiate(ItemsPrefabsArrayObject.GetComponent<PrefabArrayStore>().ItemsPrefabs[LootPrefabIndex], firstInventoryTryAttache.transform, m);
+            ItemsPrefabsArrayObject.GetComponent<PrefabArrayStore>().ItemsPrefabs[LootPrefabIndex].GetComponent<ArtursVersionInventoryCode>().GameMove = false;
+        }
+        else
+        {
+            GameObject.Find("PlayerScreenCenter").transform.GetComponent<CameraMove>().TextMessage.SetActive(true);
+            GameObject.Find("PlayerScreenCenter").transform.GetComponent<CameraMove>().TextMessage.GetComponent<Text>().text = "You heaven't Energy";
+            GameObject.Find("PlayerScreenCenter").transform.GetComponent<CameraMove>().TextTimer = true;
         }
 
         /*switch (d)
