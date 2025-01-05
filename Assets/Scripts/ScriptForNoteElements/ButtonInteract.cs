@@ -7,7 +7,9 @@ public class ButtonInteract : MonoBehaviour
 {
 
     public GameObject[] ObjectForInteract;
-    public GameObject ItemsPrefabsArrayObject;
+    
+    private int lustLocY;
+    private int lustLocX;
 
     private string names = "empty";
     private float numberOfLoot;
@@ -33,13 +35,18 @@ public class ButtonInteract : MonoBehaviour
                 break;
             case "BackPack":
                 ObjectForInteract[2].SetActive(false);
+                ObjectForInteract[6].SetActive(false);
+                ObjectForInteract[7].SetActive(false);
                 ObjectForInteract[1].SetActive(true);
                 ObjectForInteract[3].SetActive(true);
                 ObjectForInteract[5].SetActive(true);
                 break;
             case "LocInfo":
                 ObjectForInteract[1].SetActive(false);
+                ObjectForInteract[6].SetActive(false);
                 ObjectForInteract[2].SetActive(true);
+                ObjectForInteract[4].SetActive(true);
+                ObjectForInteract[5].SetActive(true);
                 break;
             case "SearcheLoot":
                 LootGeneration();
@@ -52,7 +59,24 @@ public class ButtonInteract : MonoBehaviour
                 break;
             case "ToogleLocInfo":
                 ObjectForInteract[3].SetActive(false);
+                ObjectForInteract[5].SetActive(false);
                 ObjectForInteract[4].SetActive(true);
+                ObjectForInteract[6].SetActive(true);
+                break;
+            case "SearchStoreButton":
+                ObjectForInteract[0].SetActive(true);
+                ObjectForInteract[1].SetActive(false);
+
+                if (!GameObject.Find("PlayerScreenCenter").GetComponent<CameraMove>().wasSpawnFromList)//Нужно, что бы при многократном нажатии кнопки "осмотреть склад" не спаунились лишние объекты из списка
+                {
+                    if (lustLocY != GameObject.Find("PlayerScreenCenter").GetComponent<CameraMove>().CurrentLocPlayerStay.transform.GetComponent<LocationInfoAndMouseEnter>().LocY || lustLocX != GameObject.Find("PlayerScreenCenter").GetComponent<CameraMove>().CurrentLocPlayerStay.transform.GetComponent<LocationInfoAndMouseEnter>().LocX)
+                    {
+                        GameObject.Find("PlayerScreenCenter").GetComponent<CameraMove>().SpawnItemsFromList();
+                        GameObject.Find("PlayerScreenCenter").GetComponent<CameraMove>().wasSpawnFromList = true;
+                        lustLocY = GameObject.Find("PlayerScreenCenter").GetComponent<CameraMove>().CurrentLocPlayerStay.transform.GetComponent<LocationInfoAndMouseEnter>().LocY;
+                        lustLocX = GameObject.Find("PlayerScreenCenter").GetComponent<CameraMove>().CurrentLocPlayerStay.transform.GetComponent<LocationInfoAndMouseEnter>().LocX;
+                    }
+                }
                 break;
             default:
                 break;
@@ -78,12 +102,12 @@ public class ButtonInteract : MonoBehaviour
     {
         int LootPrefabIndex = Random.Range(0, 10);
 
-        Debug.Log(LootPrefabIndex);
+        //Debug.Log(LootPrefabIndex);
         if (GameObject.Find("PlayerScreenCenter").transform.GetComponent<CameraMove>().CurentEnergy > 0)
         {
-            ItemsPrefabsArrayObject.GetComponent<PrefabArrayStore>().ItemsPrefabs[LootPrefabIndex].GetComponent<ArtursVersionInventoryCode>().GameMove = true;
-            Instantiate(ItemsPrefabsArrayObject.GetComponent<PrefabArrayStore>().ItemsPrefabs[LootPrefabIndex], firstInventoryTryAttache.transform, m);
-            ItemsPrefabsArrayObject.GetComponent<PrefabArrayStore>().ItemsPrefabs[LootPrefabIndex].GetComponent<ArtursVersionInventoryCode>().GameMove = false;
+            GameObject.Find("PrefabArrayStoreObject").GetComponent<PrefabArrayStore>().ItemsPrefabs[LootPrefabIndex].GetComponent<ArtursVersionInventoryCode>().ButtonSpownMove = true;
+            Instantiate(GameObject.Find("PrefabArrayStoreObject").GetComponent<PrefabArrayStore>().ItemsPrefabs[LootPrefabIndex], firstInventoryTryAttache.transform, m);
+            GameObject.Find("PrefabArrayStoreObject").GetComponent<PrefabArrayStore>().ItemsPrefabs[LootPrefabIndex].GetComponent<ArtursVersionInventoryCode>().ButtonSpownMove = false;
         }
         else
         {

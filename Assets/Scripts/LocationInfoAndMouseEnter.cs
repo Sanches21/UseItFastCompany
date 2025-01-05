@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class LocationInfoAndMouseEnter : MonoBehaviour//Код, который сейчас отвечает за изменение цвета локации при наведении мыши, а в дальнейшем ещё и будет содержать в себе информацию о характеристиках локации
 {
-    public List <int> ItemStoreOnLocationIndex; //массив индексов объектов, предназначенный хранить айтемы, выложенные на склад
+    [SerializeField] public List <int> ItemStoreOnLocationIndex; //массив индексов объектов, предназначенный хранить айтемы, выложенные на склад
 
     public int LocY;
     public int LocX;

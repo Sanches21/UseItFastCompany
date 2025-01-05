@@ -28,8 +28,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4864802253134359499}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.24, y: 0.317, z: -0.2325}
-  m_LocalScale: {x: 0.08, y: 0.08, z: 1}
+  m_LocalPosition: {x: -0.24, y: 0.317, z: -0.1851}
+  m_LocalScale: {x: 1, y: 1, z: 0.8750001}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4864802253515748160}
@@ -113,14 +113,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35ae2faa002065f43a0588ce8f2e2794, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PointsForCheck:
-  - {fileID: 4864802253515748161}
+  pointsForCheck: []
+  CurrentLocPlayerStayThis: {fileID: 0}
   ShiftAttach: {x: 0, y: 0, z: 0}
   TextMessage: {fileID: 3573759873273911077, guid: fffdc43bfaa8947428b0fbdde33d24fd, type: 3}
   TextDelay: 1.5
   mainCamera: {fileID: 0}
   PlayerMove: 0
-  GameMove: 0
+  ButtonSpownMove: 0
+  CameraMoveSpownMove: 0
+  wasDecreas: 0
   inventoryParent: {fileID: 0}
   playerBackpack: {fileID: 0}
   parentOfCells:
@@ -139,6 +141,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ItemIndex: 1
+  ListOfLocationStoreCurentIndex: 2147483647
 --- !u!1 &4864802253515748161
 GameObject:
   m_ObjectHideFlags: 0

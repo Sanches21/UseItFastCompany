@@ -152,8 +152,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8851117052787231923}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.417, y: -0.04, z: -0.2325}
-  m_LocalScale: {x: 0.16, y: 0.16, z: 1}
+  m_LocalPosition: {x: -0.417, y: -0.04, z: -0.1851}
+  m_LocalScale: {x: 2, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8851117051677302066}
@@ -240,17 +240,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35ae2faa002065f43a0588ce8f2e2794, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PointsForCheck:
-  - {fileID: 8851117051677302067}
-  - {fileID: 8851117052062990802}
-  - {fileID: 8851117052679803419}
-  - {fileID: 8851117051433794999}
-  ShiftAttach: {x: 0.25, y: -0.25, z: 0}
+  pointsForCheck: []
+  CurrentLocPlayerStayThis: {fileID: 0}
+  ShiftAttach: {x: 0.2, y: -0.2, z: 0}
   TextMessage: {fileID: 3573759873273911077, guid: fffdc43bfaa8947428b0fbdde33d24fd, type: 3}
   TextDelay: 1.5
   mainCamera: {fileID: 0}
   PlayerMove: 0
-  GameMove: 0
+  ButtonSpownMove: 0
+  CameraMoveSpownMove: 0
+  wasDecreas: 0
   inventoryParent: {fileID: 0}
   playerBackpack: {fileID: 0}
   parentOfCells:
@@ -268,4 +267,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1dec64d80e22ec046bb0bbc11d92070a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ItemIndex: 8
+  ItemIndex: 11
+  ListOfLocationStoreCurentIndex: 2147483647
